@@ -1,0 +1,165 @@
+---
+title: "Project"
+author: "Prabhu Priya Veeraraghavan"
+date: "3/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+
+```{r}
+library(ggplot2)
+options(scipen=999)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+```{r}
+library(tidyverse)
+library(hflights)
+
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+### DATA RETRIEVAL AND GETTING FIRST 6 ROWS
+```{r}
+getwd()
+usedcars <- read.csv("Usedcars.csv", stringsAsFactors = FALSE)
+head(usedcars)
+
+```
+#### AVERAGE PRICE AND RANGE PRICE OF CARS WITH CONDITIONS
+```{r}
+x1 <- filter(usedcars, condition == "excellent", price != 0, price < 100000, odometer < 10000, fuel == "gas")
+x2 <- select(x1, region, price, year, manufacturer, condition, odometer, fuel)
+x3 <- mean(x2$price)
+x4 <- range(x2$price)
+x2
+print(paste("The average price is :" , x3))
+print("The range of price is :")
+print(x4)
+```
+#### SUMMARY AND SAPPLY
+
+```{r}
+x1 <- filter(usedcars, price!= 0, price < 100000, odometer!=0)
+x <- select(x1, year, price, odometer)
+summary(x)
+x1 <- select(usedcars, price, odometer)
+sapply(x1,mean, na.rm= TRUE)
+ 
+```
+### FINDING OUTLIED ODOMETER READING AND OBSERVATIONS ABOVE THE OUTLIED READINGS
+
+```{r}
+carmile <- usedcars$odometer
+xe <- na.omit(carmile)
+outlier <- c()
+xb <- c()
+x2iqr = IQR(xe)
+#x2iqr
+q3 <- quantile(xe, 0.75)
+q1 <- quantile(xe, 0.25)
+q4 <- q3 + 1.5 * x2iqr
+q5 <- q1 - 1.5 * x2iqr
+print("The outliers for the odometer")
+q4
+q5
+for (val in xe)
+{
+  if (val > q4  ||  val < q5 )
+  {
+    outlier <- c(outlier,val)
+  }
+}
+ 
+for( val1 in outlier)
+{
+x1 <- filter(usedcars, odometer== val1, price != 0)
+xb <- rbind(xb,select(x1, region, year, manufacturer,odometer, price))
+}
+print(xb)
+x2 <- nrow(xb)
+ 
+print(paste(" Total number of listings with outlied mileage/odometer values :"  ,x2))
+
+
+```
+
+#### BOXPLOT FOR PRICE OUTLIERS
+```{r}
+
+boxplot(usedcars$price, main = "Boxplot for price outliers", ylab = "price in dollars", col = "pink", border = "blue")
+
+
+```
+```{r}
+x1 <- select(usedcars, year, price)
+xomit1 <- na.omit(x1)
+plot(xomit1$year, xomit1$price, main = " Price of the cars based on year of the make", ,col.main = "red",xlab = "Year", ylab = "Price in Dollars", col = "red")
+```
+
+```{r}
+x1 <- select(usedcars, year, region, price, manufacturer,fuel,transmission,odometer)
+xomit <- na.omit(x1)
+xmax <- max(xomit$year)
+xmin <- min(xomit$year) 
+
+x4 <- filter(xomit,year == xmax)
+x5 <- select(x4, region,price,year, manufacturer,odometer,fuel,transmission)
+print(x5)
+x6 <- filter(xomit,year == xmin)
+x7 <- select(x6, region,price,year, manufacturer,odometer,fuel,transmission)
+print(x7)
+```
+
+```{r}
+freqdata <- filter(usedcars, manufacturer!= "")
+xfreq <- table(freqdata$manufacturer)
+par(las =3)
+plot(xfreq, ylab = " No of Cars", main = "Car Listings per Manufacturer", col = "purple", cex.axis	=	0.60, cex.lab	=	1.5)
+```
+
+
+```{r}
+ggplot(usedcars,	aes(x	=	year))	+	geom_histogram(binwidth	=2)+ ggtitle("Car listings based on year of make")+ xlim(1940,2020)
+```
+
+
+```{r}
+p	<-	ggplot(usedcars	,	aes(x=price,	y=odometer, col = price))	+geom_point()+ ylim(0,250000) + xlim(0,100000) + ggtitle(" Odometer reading vs Price Range")
+print(p)
+```
+```{r}
+aggprice <- aggregate(price ~ year,data=usedcars,FUN=mean) 
+pl1 <- ggplot(aggprice,aes(x=price, y=year, color = price)) +geom_point()+ ggtitle(" Average listing price of cars based on year of make") + xlim(1000,30000)
+plot(pl1) 
+```
+
+```{r}
+x3 <- filter(usedcars, paint_color != "", type != "")
+ggplot(data = x3) + geom_bar(aes(x = paint_color,fill=type))+ ylim(0,150)+
+ggtitle(" Available colors for each vehicle type")
+
+```
